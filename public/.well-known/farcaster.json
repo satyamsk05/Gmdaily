@@ -1,0 +1,13 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "frame": {
+    "version": "1",
+    "name": "GM Daily",
+    "iconUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/square.png",
+    "homeUrl": "https://fastermini.vercel.app"
+  }
+}
