@@ -3,6 +3,14 @@ import StatusBar from '../components/StatusBar';
 import { useAccount } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import {
+    ConnectWallet,
+    Wallet,
+    WalletDropdown,
+    WalletDropdownDisconnect,
+    WalletDropdownLink
+} from '@coinbase/onchainkit/wallet';
+import { Avatar, Name, Address, Identity, EthBalance } from '@coinbase/onchainkit/identity';
+import {
     Transaction,
     TransactionButton,
     TransactionStatus,
@@ -59,7 +67,25 @@ const CheckInPage = () => {
                     <span className="material-icons text-lg">chevron_left</span>
                 </button>
                 <h1 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Daily Activity</h1>
-                <div className="w-10"></div>
+                <div className="flex items-center">
+                    <Wallet>
+                        <ConnectWallet className="bg-transparent text-slate-900 dark:text-white p-0 h-auto min-w-0 border-none">
+                            <Avatar className="h-8 w-8" />
+                        </ConnectWallet>
+                        <WalletDropdown className="z-[100]">
+                            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                                <Avatar />
+                                <Name />
+                                <Address />
+                                <EthBalance />
+                            </Identity>
+                            <WalletDropdownLink icon="settings" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }}>
+                                Settings
+                            </WalletDropdownLink>
+                            <WalletDropdownDisconnect />
+                        </WalletDropdown>
+                    </Wallet>
+                </div>
             </header>
 
             <main className="flex-1 overflow-y-auto w-full pb-24">
@@ -178,8 +204,8 @@ const CheckInPage = () => {
                                 <TransactionButton
                                     disabled={hasCheckedInToday}
                                     className={`w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg text-white ${hasCheckedInToday
-                                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-white/5'
-                                            : 'bg-gradient-to-tr from-primary to-blue-500 shadow-primary/30'
+                                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-white/5'
+                                        : 'bg-gradient-to-tr from-primary to-blue-500 shadow-primary/30'
                                         }`}
                                 >
                                     <span className="material-icons text-sm">{hasCheckedInToday ? 'done_all' : 'fingerprint'}</span>

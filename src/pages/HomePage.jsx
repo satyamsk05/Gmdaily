@@ -277,23 +277,26 @@ const HomePage = () => {
 
                     </div>
                     <div className="flex items-center gap-2">
-                        <button className="w-10 h-10 rounded-xl glass-effect dark:bg-slate-900/80 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5 active:scale-90 transition-all">
-                            <span className="material-icons text-lg">notifications_none</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/settings')}
-                            className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-blue-500 text-white shadow-md active:scale-95 transition-all"
-                        >
-                            <img
-                                src={avatarUrl}
-                                alt="DP"
-                                className="w-7 h-7 rounded-full ring-2 ring-white/50"
-                            />
-                            <span className="text-[10px] font-black">
-                                {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Profile'}
-                            </span>
-                        </button>
-
+                        <Wallet>
+                            <ConnectWallet className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-0 h-auto min-w-0 border-none">
+                                <div className="flex items-center gap-2 pl-1.5 pr-3 py-1">
+                                    <Avatar className="h-7 w-7" />
+                                    <Name className="text-[10px] font-black text-white" />
+                                </div>
+                            </ConnectWallet>
+                            <WalletDropdown className="z-[100]">
+                                <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                                    <Avatar />
+                                    <Name />
+                                    <Address />
+                                    <EthBalance />
+                                </Identity>
+                                <WalletDropdownLink icon="settings" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }}>
+                                    Settings
+                                </WalletDropdownLink>
+                                <WalletDropdownDisconnect />
+                            </WalletDropdown>
+                        </Wallet>
                     </div>
                 </header>
 

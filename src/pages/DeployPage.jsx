@@ -2,6 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatusBar from '../components/StatusBar';
 
+import {
+    ConnectWallet,
+    Wallet,
+    WalletDropdown,
+    WalletDropdownDisconnect,
+    WalletDropdownLink
+} from '@coinbase/onchainkit/wallet';
+import { Avatar, Name, Address, Identity, EthBalance } from '@coinbase/onchainkit/identity';
+
 const DeployPage = () => {
     const navigate = useNavigate();
 
@@ -13,7 +22,25 @@ const DeployPage = () => {
                     <span className="material-icons text-xl">chevron_left</span>
                 </button>
                 <h1 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Deployer</h1>
-                <div className="w-12"></div>
+                <div className="flex items-center">
+                    <Wallet>
+                        <ConnectWallet className="bg-transparent text-slate-900 dark:text-white p-0 h-auto min-w-0 border-none">
+                            <Avatar className="h-9 w-9" />
+                        </ConnectWallet>
+                        <WalletDropdown className="z-[100]">
+                            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                                <Avatar />
+                                <Name />
+                                <Address />
+                                <EthBalance />
+                            </Identity>
+                            <WalletDropdownLink icon="settings" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }}>
+                                Settings
+                            </WalletDropdownLink>
+                            <WalletDropdownDisconnect />
+                        </WalletDropdown>
+                    </Wallet>
+                </div>
             </header>
 
             <main className="flex-1 overflow-y-auto w-full px-4 pt-6 pb-24">
