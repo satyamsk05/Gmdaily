@@ -1,13 +1,19 @@
 {
-  "accountAssociation": {
-    "header": "",
-    "payload": "",
-    "signature": ""
-  },
-  "frame": {
-    "version": "1",
-    "name": "GM Daily",
-    "iconUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/square.png",
-    "homeUrl": "https://fastermini.vercel.app"
-  }
+    "frame": {
+        "name": "GmDaily",
+        "version": "1",
+        "iconUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
+        "homeUrl": "https://fastermini.vercel.app",
+        "imageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
+        "splashImageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/splash.png",
+        "splashBackgroundColor": "#6200EA",
+        "webhookUrl": "https://fastermini.vercel.app/api/webhook",
+        "subtitle": "DO IT",
+        "description": "base chain daily gm / check in activity",
+        "primaryCategory": "productivity",
+        "screenshotUrls": [
+            "https://drive.google.com/file/d/1NJ70eww--jJWItMWpwIdax6O0xCW42OR/view?usp=sharing"
+        ],
+        "heroImageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/hero.png"
+    }
 }
