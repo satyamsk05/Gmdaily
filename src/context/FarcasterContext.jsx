@@ -16,20 +16,19 @@ export const FarcasterProvider = ({ children }) => {
             try {
                 const frameContext = await sdk.context;
                 setContext(frameContext);
-
-                // Signal to Farcaster that the frame is ready
-                sdk.actions.ready();
             } catch (error) {
                 console.error('Error loading Farcaster context:', error);
             } finally {
                 setIsLoaded(true);
+                // Signal to Farcaster that the frame is ready
+                sdk.actions.ready();
             }
         };
 
         if (!isLoaded) {
             load();
         }
-    }, [isLoaded]);
+    }, []);
 
     return (
         <FarcasterContext.Provider value={{ context, isLoaded }}>
