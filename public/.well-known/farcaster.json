@@ -5,19 +5,32 @@
         "signature": "FwPeZqBG2iJzC46lUoufM9Bn5bQKkry7yDpfdEKFCjApe1iFeHsgyQq6Srl1eh57vCjVfcuULp0oIXD4LzNRzhs="
     },
     "frame": {
-        "name": "GmDaily",
+        "name": "Gm daily",
         "version": "1",
-        "iconUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
-        "homeUrl": "https://satyamsk05.github.io/fastermini",
-        "imageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
-        "splashImageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/splash.png",
-        "splashBackgroundColor": "#6200EA",
+        "iconUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/icon.png",
+        "homeUrl": "https://gmdaily.vercel.app/",
         "subtitle": "DO IT",
-        "description": "base chain daily gm and check in activity",
-        "primaryCategory": "productivity",
+        "description": "base chain daily activity",
+        "primaryCategory": "finance",
         "screenshotUrls": [
-            "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png"
+            "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png"
         ],
-        "heroImageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/hero.png"
+        "imageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
+        "heroImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
+        "splashImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
+        "splashBackgroundColor": "#6200EA",
+        "tags": [
+            "crypto",
+            "web3",
+            "gm",
+            "depoly"
+        ],
+        "tagline": "Start your day with Web3.",
+        "buttonTitle": "Gm Daily",
+        "ogTitle": "GM Daily - Your Web3 Morning ",
+        "ogDescription": "Check in daily, discover alpha, complete tasks and grow in Web3.",
+        "ogImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
+        "castShareUrl": "https://warpcast.com/~/compose?text=GM%20⚡%20Getting%20my%20daily%20dose%20of%20alpha%20on%20GM%20Daily.",
+        "webhookUrl": "https://gmdaily-git-main-ogs-projects-7f30eef8.vercel.app/"
     }
 }
