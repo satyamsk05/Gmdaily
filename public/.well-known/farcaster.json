@@ -31,6 +31,6 @@
         "ogDescription": "Check in daily, discover alpha, complete tasks and grow in Web3.",
         "ogImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
         "castShareUrl": "https://warpcast.com/~/compose?text=GM%20⚡%20Getting%20my%20daily%20dose%20of%20alpha%20on%20GM%20Daily.",
-        "webhookUrl": "https://gmdaily-git-main-ogs-projects-7f30eef8.vercel.app/"
+        "webhookUrl": "https://gmdaily.vercel.app/api/webhook"
     }
 }
