@@ -17,6 +17,13 @@
 
     --animate-shake: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     --animate-drip: drip 2s ease-in-out infinite;
+
+    --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
+    --glow-cyan-deep: 0 0 30px rgba(0, 240, 255, 0.15);
+    --glow-purple: 0 0 20px rgba(191, 0, 255, 0.3);
+    --glow-purple-deep: 0 0 30px rgba(191, 0, 255, 0.15);
+    --glow-red: 0 0 20px rgba(255, 0, 60, 0.3);
+    --glow-red-deep: 0 0 30px rgba(255, 0, 60, 0.15);
 }
 
 @keyframes shake {
@@ -115,17 +122,29 @@
         @apply bg-white/60 dark:bg-void/80 backdrop-blur-3xl border border-white/20 dark:border-white/5 shadow-2xl;
     }
 
-    /* Neon Glow Utilities */
+    /* Build-Safe Neon Glow Utilities */
     .neon-glow-cyan {
-        @apply shadow-[0_0_20px_rgba(0, 240, 255, 0.3)] dark:shadow-[0_0_30px_rgba(0, 240, 255, 0.15)];
+        box-shadow: var(--glow-cyan);
+    }
+
+    .dark .neon-glow-cyan {
+        box-shadow: var(--glow-cyan-deep);
     }
 
     .neon-glow-purple {
-        @apply shadow-[0_0_20px_rgba(191, 0, 255, 0.3)] dark:shadow-[0_0_30px_rgba(191, 0, 255, 0.15)];
+        box-shadow: var(--glow-purple);
+    }
+
+    .dark .neon-glow-purple {
+        box-shadow: var(--glow-purple-deep);
     }
 
     .neon-glow-red {
-        @apply shadow-[0_0_20px_rgba(255, 0, 60, 0.3)] dark:shadow-[0_0_30px_rgba(255, 0, 60, 0.15)];
+        box-shadow: var(--glow-red);
+    }
+
+    .dark .neon-glow-red {
+        box-shadow: var(--glow-red-deep);
     }
 
     /* Laser Border Utility */
