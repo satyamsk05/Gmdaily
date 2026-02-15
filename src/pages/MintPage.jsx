@@ -40,13 +40,19 @@ const MintPage = () => {
 
   const [txHash, setTxHash] = useState(null);
   const [gasFee, setGasFee] = useState(null);
+  const [isRevealed, setIsRevealed] = useState(false);
   const [randomImage, setRandomImage] = useState('/images/hero.png');
 
-  // Actual images from the public folder to make the NFT feel authentic
-  const nftImages = ['/images/hero.png', '/images/square.png', '/images/splash.png', '/images/preview.png'];
+  // Realistic anime-style portraits (placeholders until generator is available)
+  const nftImages = [
+    'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=400&fit=crop', // Anime girl art
+    'https://images.unsplash.com/photo-1541560052-5e137f229371?w=400&h=400&fit=crop', // Cyberpunk art
+    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&h=400&fit=crop', // Stylized portrait
+    'https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400&h=400&fit=crop'  // Digital art
+  ];
 
   useEffect(() => {
-    // Pick a random image on mount
+    // Pick a random image on mount (this will be the one revealed)
     setRandomImage(nftImages[Math.floor(Math.random() * nftImages.length)]);
 
     // Estimate gas if connected
@@ -80,12 +86,21 @@ const MintPage = () => {
   const handleSuccess = (response) => {
     const hash = response?.transactionHash || response;
     setTxHash(hash);
+    setIsRevealed(true); // Trigger Reveal!
+
     addActivity('Mint', {
       title: 'Minted Legend NFT',
       amount: `-${MINT_PRICE_ETH} ETH`,
       status: 'Confirmed',
       transactionHash: hash,
     });
+  };
+
+  // Function to get a fresh random image for subsequent mints
+  const cycleNft = () => {
+    setRandomImage(nftImages[Math.floor(Math.random() * nftImages.length)]);
+    setIsRevealed(false);
+    setTxHash(null);
   };
 
   const calls = useMemo(() => [
@@ -118,15 +133,29 @@ const MintPage = () => {
 
       <main className="flex-1 overflow-y-auto w-full px-8 pt-4 pb-32 relative z-10">
         <div className="flex flex-col items-center mb-10 animate-fade-in-up">
-          <div className="relative mb-6">
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 animate-pulse"></div>
-            <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-2xl relative z-10 border-4 border-white dark:border-slate-900 overflow-hidden">
-              <img src={randomImage} alt="NFT Preview" className="w-full h-full object-cover relative z-20" />
-              <div className="absolute inset-0 bg-primary/20 z-10"></div>
+          <div className="relative mb-6 group/nft">
+            {/* Background Glows */}
+            <div className={`absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 transition-all duration-1000 ${isRevealed ? 'opacity-40' : 'animate-pulse opacity-20'}`}></div>
+
+            <div className={`w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-2xl relative z-10 border-4 border-white dark:border-slate-900 overflow-hidden transition-all duration-700 ${isRevealed ? 'scale-100' : 'scale-90'}`}>
+              {!isRevealed ? (
+                /* Mystery Placeholder */
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center animate-pulse">
+                  <span className="material-icons text-white/40 text-4xl mb-1">question_mark</span>
+                  <div className="w-8 h-1 bg-white/20 rounded-full"></div>
+                </div>
+              ) : (
+                /* Revealed NFT Art */
+                <img src={randomImage} alt="NFT Art" className="w-full h-full object-cover animate-in zoom-in spin-in-6 duration-1000 relative z-20" />
+              )}
+              <div className="absolute inset-0 bg-primary/10 z-10"></div>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-emerald-500 w-8 h-8 rounded-2xl flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-lg z-30">
-              <span className="material-icons text-white text-[14px]">verified</span>
-            </div>
+
+            {isRevealed && (
+              <div className="absolute -bottom-2 -right-2 bg-emerald-500 w-8 h-8 rounded-2xl flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-xl z-30 animate-in zoom-in duration-500 delay-500">
+                <span className="material-icons text-white text-[14px]">verified</span>
+              </div>
+            )}
           </div>
           <h1 className="text-4xl font-black leading-tight text-slate-900 dark:text-white text-center tracking-tight">The Legend</h1>
           <p className="text-slate-400 dark:text-slate-500 text-[10px] mt-2 font-black uppercase tracking-[0.2em] bg-slate-100 dark:bg-white/5 px-4 py-1.5 rounded-full border border-slate-200 dark:border-white/5">Digital Collectible</p>
@@ -216,14 +245,23 @@ const MintPage = () => {
                       <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">Your onchain journey is secured.</p>
                     </div>
                   </div>
-                  <a
-                    href={`https://basescan.org/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center w-full h-12 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all relative z-10"
-                  >
-                    View on BaseScan
-                  </a>
+                  <div className="flex gap-3">
+                    <a
+                      href={`https://basescan.org/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center h-12 bg-white/10 dark:bg-white/5 text-slate-900 dark:text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-200 dark:border-white/10 active:scale-95 transition-all relative z-10"
+                    >
+                      View Scan
+                    </a>
+                    <button
+                      onClick={cycleNft}
+                      className="flex-[1.5] flex items-center justify-center h-12 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all relative z-10 hover:bg-emerald-400"
+                    >
+                      Mint Another
+                      <span className="material-icons text-sm ml-2">autorenew</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
