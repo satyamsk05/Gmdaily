@@ -1,8 +1,8 @@
 {
     "accountAssociation": {
         "header": "eyJmaWQiOjM3NTYzNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDVBQTJmNjUwRUQxZDFCNzJkODNCQzQ5NTM3MTAwZTM1ZjIxOTkwQzgifQ",
-        "payload": "eyJkb21haW4iOiJmYXN0ZXJtaW5pLnZlcmNlbC5hcHAifQ",
-        "signature": "FwPeZqBG2iJzC46lUoufM9Bn5bQKkry7yDpfdEKFCjApe1iFeHsgyQq6Srl1eh57vCjVfcuULp0oIXD4LzNRzhs="
+        "payload": "eyJkb21haW4iOiJnbWRhaWx5LnZlcmNlbC5hcHAifQ",
+        "signature": "+YZ3wMS6Z9x4REkBvHzMjnUrzRjCUFADxQQn5teOMkRFJhV311jKMQ/LBwxDO0HdywOLZBMV68Buf9CthlHxfRs="
     },
     "frame": {
         "name": "Gm daily",
