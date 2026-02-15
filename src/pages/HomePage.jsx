@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount, useBalance, useSendTransaction, useSwitchChain, usePublicClient } from 'wagmi';
 import { useUser } from '../context/UserContext';
 import { parseEther, encodeFunctionData, formatEther } from 'viem';
-import { base, mainnet } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 import { QRCodeSVG } from 'qrcode.react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ConnectWallet,
     Wallet,
     WalletDropdown,
     WalletDropdownDisconnect,
-    WalletDropdownFundLink,
     WalletDropdownLink
 } from '@coinbase/onchainkit/wallet';
 import {
@@ -33,13 +33,11 @@ const HomePage = () => {
 
     const { activities, addActivity, checkInData } = useActivity();
     const { sendTransaction, isLoading: isSending } = useSendTransaction();
-    const { switchChain } = useSwitchChain();
 
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [showSendModal, setShowSendModal] = useState(false);
     const [sendAddress, setSendAddress] = useState('');
     const [sendAmount, setSendAmount] = useState('');
-    const [selectedChain, setSelectedChain] = useState('base');
     const [selectedTx, setSelectedTx] = useState(null);
     const [showTxModal, setShowTxModal] = useState(false);
     const [activityFilter, setActivityFilter] = useState('All');
@@ -58,7 +56,7 @@ const HomePage = () => {
     const handleMaxAmount = () => {
         if (balance) {
             const available = parseFloat(balance.formatted);
-            const gasReserve = 0.00002;
+            const gasReserve = 0.00005;
             const max = Math.max(0, available - gasReserve);
             setSendAmount(max.toFixed(6));
         }
@@ -96,19 +94,13 @@ const HomePage = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const NFT_CONTRACT = '0x354F55a1DDfC9d2F62068eC1385e8c3124CABC78';
-    const nftAbi = [{ type: 'function', name: 'mint', stateMutability: 'payable', inputs: [], outputs: [] }];
+    const NFT_CONTRACT = '0xa932a9960C83FcCc382bd8fd7CE6b6AeF4a2e2dE';
     const GM_CONTRACT = '0x9A966BbE0E8f4954a32C16e76789D817C466C603';
+    const nftAbi = [{ type: 'function', name: 'mint', stateMutability: 'payable', inputs: [], outputs: [] }];
     const gmAbi = [{ type: 'function', name: 'gm', stateMutability: 'payable', inputs: [], outputs: [] }];
 
     const handleTxClick = async (activity) => {
-        const inferredTo =
-            activity.to ||
-            (activity.type === 'GM' || activity.type === 'Check-in'
-                ? GM_CONTRACT
-                : (activity.title && activity.title.includes('Mint')) || activity.type === 'Mint'
-                    ? NFT_CONTRACT
-                    : undefined);
+        const inferredTo = activity.to || (activity.type === 'GM' || activity.type === 'Check-in' ? GM_CONTRACT : (activity.title && activity.title.includes('Mint')) || activity.type === 'Mint' ? NFT_CONTRACT : undefined);
         const enriched = { ...activity, to: inferredTo };
         setSelectedTx(enriched);
         setShowTxModal(true);
@@ -116,16 +108,9 @@ const HomePage = () => {
             if (!publicClient || !address || !inferredTo) return;
             let request = { account: address, to: inferredTo, value: 0n };
             if (activity.type === 'GM' || activity.type === 'Check-in') {
-                request = {
-                    ...request,
-                    data: encodeFunctionData({ abi: gmAbi, functionName: 'gm', args: [] }),
-                    value: parseEther('0.00001'),
-                };
+                request = { ...request, data: encodeFunctionData({ abi: gmAbi, functionName: 'gm', args: [] }), value: parseEther('0.00001') };
             } else if ((activity.title && activity.title.includes('Mint')) || activity.type === 'Mint') {
-                request = {
-                    ...request,
-                    data: encodeFunctionData({ abi: nftAbi, functionName: 'mint', args: [] }),
-                };
+                request = { ...request, data: encodeFunctionData({ abi: nftAbi, functionName: 'mint', args: [] }), value: parseEther('0.0002') };
             } else if (activity.type === 'Transaction' && activity.amount) {
                 const amt = activity.amount.replace(/[^\d.]/g, '');
                 if (amt) request = { ...request, value: parseEther(amt) };
@@ -134,15 +119,11 @@ const HomePage = () => {
             const gasPrice = await publicClient.getGasPrice();
             const feeWei = gas * gasPrice;
             const feeEth = Number(formatEther(feeWei));
-            const gasPriceGwei = Number(gasPrice) / 1e9;
-            setTxFee({ feeEth, gas: gas.toString(), gasPriceGwei });
+            setTxFee({ feeEth, gas: gas.toString(), gasPriceGwei: Number(gasPrice) / 1e9 });
             if (activity.transactionHash) {
                 const receipt = await publicClient.getTransactionReceipt({ hash: activity.transactionHash });
                 setTxReceipt(receipt || null);
                 setTxExplorerUrl(`https://basescan.org/tx/${activity.transactionHash}`);
-            } else {
-                setTxReceipt(null);
-                setTxExplorerUrl(null);
             }
         } catch {
             setTxFee(null);
@@ -174,41 +155,37 @@ const HomePage = () => {
     const { data: balance } = useBalance({ address: address });
 
     return (
-        <div className="flex flex-col h-full w-full max-w-full bg-background-light dark:bg-background-dark overflow-hidden fixed inset-0">
-            {/* Background Orbs */}
-            <div className="bg-orb w-80 h-80 bg-primary/20 -top-20 -right-20 animate-pulse"></div>
-            <div className="bg-orb w-64 h-64 bg-indigo-500/10 bottom-1/4 -left-32 animate-bounce-slow"></div>
+        <div className="flex flex-col h-full w-full bg-transparent overflow-hidden relative">
+            {/* Background Orbs & Atmosphere */}
+            <div className="absolute inset-0 bg-gradient-to-b from-void via-slate-950 to-void opacity-0 dark:opacity-100 transition-opacity duration-1000 z-0"></div>
+            <div className="bg-orb w-[500px] h-[500px] bg-cyber-cyan/10 -top-40 -right-40 animate-pulse blur-[120px]"></div>
+            <div className="bg-orb w-[400px] h-[400px] bg-vivid-purple/10 bottom-1/4 -left-40 animate-bounce-slow blur-[100px]"></div>
 
             <main className="flex-1 overflow-y-auto px-6 pb-28 w-full relative z-10">
                 {/* Header Section */}
-                <header className="flex justify-between items-center mb-8 pt-6 animate-fade-in-up">
+                <header className="flex justify-between items-center mb-10 pt-8 animate-fade-in-up">
                     <div className="flex flex-col">
-                        <p className="text-[10px] font-black text-primary/80 dark:text-primary/70 uppercase tracking-[0.2em] mb-1">
+                        <p className="font-marker text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-[0.4em] mb-1">
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                         </p>
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                            {context?.user?.displayName ? `Hi, ${context.user.displayName}` : (isConnected ? `Hi, ${userName}` : 'GM, Friend')}
+                        <h1 className="text-3xl font-marker italic tracking-tighter text-slate-900 dark:text-white leading-tight">
+                            {context?.user?.displayName ? `HI, ${context.user.displayName.toUpperCase()}` : (isConnected ? `HI, ${userName.toUpperCase()}` : 'GM, FRIEND')}
                         </h1>
                     </div>
                     <div className="flex items-center relative group/wallet">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-full blur opacity-0 group-hover/wallet:opacity-100 transition-opacity duration-500"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-cyber-cyan/30 to-vivid-purple/30 rounded-2xl blur opacity-0 group-hover/wallet:opacity-100 transition-opacity duration-500"></div>
                         <Wallet>
-                            <ConnectWallet className="bg-transparent p-0 border-none hover:bg-transparent">
+                            <ConnectWallet className="bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-1">
                                 {context?.user?.pfpUrl ? (
                                     <div className="relative">
-                                        <img
-                                            src={context.user.pfpUrl}
-                                            alt="Farcaster Profile"
-                                            className="w-10 h-10 rounded-full border-2 border-white dark:border-white/10 shadow-md object-cover"
-                                        />
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#855DCD] border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                                            <img src="https://farcaster.xyz/favicon.ico" alt="FC" className="w-2.5 h-2.5" />
+                                        <img src={context.user.pfpUrl} alt="PFP" className="w-9 h-9 rounded-xl border border-white/10 shadow-md object-cover" />
+                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-void border border-white/20 flex items-center justify-center">
+                                            <span className="text-[6px] text-white">FC</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <Avatar className="h-10 w-10 text-white" />
+                                    <Avatar className="h-9 w-9" />
                                 )}
-                                <span className="sr-only">Connect Wallet</span>
                             </ConnectWallet>
                             <WalletDropdown className="z-[100]">
                                 <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
@@ -217,129 +194,138 @@ const HomePage = () => {
                                     <Address />
                                     <EthBalance />
                                 </Identity>
-                                <WalletDropdownLink icon="settings" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }}>
-                                    Settings
-                                </WalletDropdownLink>
+                                <WalletDropdownLink icon="settings" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }}>Settings</WalletDropdownLink>
                                 <WalletDropdownDisconnect />
                             </WalletDropdown>
                         </Wallet>
                     </div>
                 </header>
 
-                {/* Balance Card Section */}
-                <section className="glass-effect dark:bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-6 mb-8 relative overflow-hidden group border border-white dark:border-white/5 shadow-2xl hover:scale-[1.01] transition-all duration-500 animate-fade-in-up delay-100">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/20 transition-all duration-700"></div>
+                {/* Balance Card Section - Reimagined with Laser Border & Bloom */}
+                <section className="p-[1px] rounded-[3.5rem] bg-gradient-to-br from-cyber-cyan via-vivid-purple to-graffiti-red shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] mb-10 group animate-fade-in-up delay-100 relative">
+                    {/* Bloom effect behind card */}
+                    <div className="absolute inset-0 bg-cyber-cyan/5 blur-3xl rounded-full opacity-0 dark:group-hover:opacity-100 transition-opacity duration-1000"></div>
 
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <p className="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.25em] mb-2">Portfolio Value</p>
-                                <div className="flex items-baseline gap-2">
-                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
-                                        {balance ? parseFloat(balance.formatted).toFixed(4) : '0.0000'}
-                                    </h3>
-                                    <span className="text-sm font-black text-primary uppercase tracking-widest">ETH</span>
+                    <div className="bg-white/95 dark:bg-slate-900/98 backdrop-blur-3xl rounded-[3.4rem] p-8 relative overflow-hidden h-full border border-white/10 dark:neon-glow-cyan transition-all duration-500">
+                        <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-noise" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
+
+                        {/* Laser border animation on top */}
+                        <div className="absolute inset-0 rounded-[3.4rem] laser-border opacity-0 dark:opacity-30 pointer-events-none" />
+
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start mb-8">
+                                <div>
+                                    <p className="font-marker text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-[0.4em] mb-2">SAFE PORTFOLIO</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h3 className="text-5xl font-marker italic text-slate-900 dark:text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                                            {balance ? parseFloat(balance.formatted).toFixed(4) : '0.0000'}
+                                        </h3>
+                                        <span className="font-marker text-sm text-primary italic uppercase tracking-widest animate-pulse">ETH</span>
+                                    </div>
+                                </div>
+                                <div className="bg-void dark:bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2 shadow-xl">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10B981]"></span>
+                                    <span className="font-marker text-[9px] text-white/70 uppercase tracking-tighter">LIVE_FEED</span>
                                 </div>
                             </div>
-                            <div className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black border border-emerald-500/20 flex items-center gap-1">
-                                <span className="material-icons text-[10px]">trending_up</span>
-                                LIVE
-                            </div>
-                        </div>
 
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => setShowReceiveModal(true)}
-                                className="flex-1 btn-premium h-14 rounded-2xl flex items-center justify-center gap-2"
-                            >
-                                <span className="material-icons text-xl">qr_code_2</span>
-                                Receive
-                            </button>
-                            <button
-                                onClick={() => setShowSendModal(true)}
-                                className="flex-1 bg-white dark:bg-slate-900/60 text-slate-900 dark:text-white h-14 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg border border-slate-100 dark:border-white/5 hover:border-primary/30 text-[10px] uppercase tracking-[0.2em]"
-                            >
-                                <span className="material-icons text-xl">north_east</span>
-                                Send
-                            </button>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setShowReceiveModal(true)}
+                                    className="flex-1 h-14 rounded-2xl bg-void text-white font-marker text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-2xl active:scale-95 transition-all border border-white/10 hover:neon-glow-cyan"
+                                >
+                                    <span className="material-icons text-xl text-cyber-cyan">qr_code_2</span>
+                                    Receive
+                                </button>
+                                <button
+                                    onClick={() => setShowSendModal(true)}
+                                    className="flex-1 h-14 rounded-2xl bg-white dark:bg-white/5 text-slate-900 dark:text-white font-marker text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-slate-200 dark:border-white/10 hover:neon-glow-red"
+                                >
+                                    <span className="material-icons text-xl text-graffiti-red">north_east</span>
+                                    Transfer
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                {/* Primary Action Button */}
-                <div className="mb-10 animate-fade-in-up delay-200">
+                {/* Primary Action Section */}
+                <div className="mb-12 animate-fade-in-up delay-200">
                     <button
                         onClick={() => navigate('/mint')}
-                        className="glossy-button w-full h-18 rounded-3xl text-white font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-[0.97] border border-white/20 relative overflow-hidden group"
+                        className="w-full h-20 rounded-[2.5rem] bg-void border border-white/10 flex items-center justify-center gap-4 active:scale-[0.98] transition-all relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
                     >
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary via-indigo-500 to-indigo-600 blur-xl opacity-20 group-hover:opacity-60 transition-all duration-700 animate-pulse"></div>
-                        <span className="material-icons text-xl group-hover:rotate-12 transition-transform relative z-10">auto_awesome</span>
-                        <span className="relative z-10">Mint Legend NFT</span>
-                        {/* Shimmer Effect */}
-                        <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-15deg] pointer-events-none animate-shimmer scale-150"></div>
+                        <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-noise" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyber-cyan to-vivid-purple opacity-20 group-hover:opacity-60 transition-all duration-700 animate-pulse blur-xl"></div>
+                        <span className="material-icons text-3xl text-graffiti-red group-hover:rotate-45 transition-transform relative z-10">auto_awesome</span>
+                        <span className="font-marker text-lg text-white uppercase tracking-[0.2em] relative z-10 italic">MINT LEGEND NFT</span>
+                        <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-15deg] pointer-events-none animate-shimmer scale-150"></div>
                     </button>
                 </div>
 
-                {/* Routines Grid */}
-                <section className="mb-10 animate-fade-in-up delay-300">
-                    <div className="flex items-center justify-between mb-5 px-1">
-                        <h3 className="font-black text-lg tracking-tight text-slate-900 dark:text-white">Active Rituals</h3>
-                        <button className="text-[10px] font-black uppercase tracking-widest text-slate-400">View All</button>
+                {/* Rituals Registry */}
+                <section className="mb-12 animate-fade-in-up delay-300">
+                    <div className="flex items-center justify-between mb-6 px-1">
+                        <h3 className="font-marker text-xl tracking-tighter text-slate-900 dark:text-white italic">ACTIVE RITUALS</h3>
+                        <p className="font-marker text-[9px] uppercase tracking-[0.3em] text-slate-400">STATUS: SYNCED</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                         <button
                             onClick={() => navigate('/checkin')}
-                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border-2 border-orange-500 dark:border-orange-400 shadow-xl shadow-orange-500/20 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group relative active:scale-[0.97]"
+                            className="p-[1px] rounded-[2.5rem] bg-gradient-to-tr from-graffiti-red/30 to-transparent flex-1"
                         >
-                            <div className="absolute top-2 right-2 bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-orange-500/20">
-                                {checkInData?.streak ?? 0} DAYS
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/10 group-hover:bg-orange-500/20 transition-colors shadow-inner">
-                                <span className="material-icons text-2xl text-orange-500">local_fire_department</span>
-                            </div>
-                            <div className="text-left">
-                                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">Check-in</p>
-                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Earn Points</p>
+                            <div className="bg-white/60 dark:bg-slate-900/40 p-6 rounded-[2.45rem] flex flex-col items-start gap-4 hover:bg-white transition-all group relative active:scale-[0.97] backdrop-blur-2xl">
+                                <div className="absolute top-3 right-3 bg-void px-2 py-0.5 rounded-lg border border-white/10 shadow-xl">
+                                    <span className="font-marker text-[8px] text-graffiti-red">{checkInData?.streak ?? 0}D STREAK</span>
+                                </div>
+                                <div className="w-14 h-14 rounded-2xl bg-void flex items-center justify-center border border-white/10 group-hover:rotate-6 transition-transform shadow-2xl">
+                                    <span className="material-icons text-3xl text-graffiti-red animate-pulse">local_fire_department</span>
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-marker text-base text-slate-900 dark:text-white tracking-tight">VERIFY GM</p>
+                                    <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">Secure Points</p>
+                                </div>
                             </div>
                         </button>
 
                         <button
                             onClick={() => navigate('/deploy')}
-                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border-2 border-indigo-500 dark:border-indigo-400 shadow-xl shadow-indigo-500/20 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group active:scale-[0.97]"
+                            className="p-[1px] rounded-[2.5rem] bg-gradient-to-tr from-cyber-cyan/30 to-transparent flex-1"
                         >
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/10 group-hover:bg-indigo-500/20 transition-colors shadow-inner">
-                                <span className="material-icons text-2xl text-indigo-500">rocket_launch</span>
-                            </div>
-                            <div className="text-left">
-                                <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">Smart Deploy</p>
-                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Base Mainnet</p>
+                            <div className="bg-white/60 dark:bg-slate-900/40 p-6 rounded-[2.45rem] flex flex-col items-start gap-4 hover:bg-white transition-all group active:scale-[0.97] backdrop-blur-2xl">
+                                <div className="w-14 h-14 rounded-2xl bg-void flex items-center justify-center border border-white/10 group-hover:-rotate-6 transition-transform shadow-2xl">
+                                    <span className="material-icons text-3xl text-cyber-cyan">rocket_launch</span>
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-marker text-base text-slate-900 dark:text-white tracking-tight">DEPLOYER</p>
+                                    <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">Base Mainnet</p>
+                                </div>
                             </div>
                         </button>
                     </div>
                 </section>
 
-                {/* Activity Section */}
-                <section className="mb-12 animate-fade-in-up delay-400">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-black text-lg tracking-tight text-slate-900 dark:text-white px-1">
-                            {activityFilter === 'Legends' ? 'My Legends' : 'Recent Activity'}
+                {/* Ledger Feed */}
+                <section className="animate-fade-in-up delay-400">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="font-marker text-xl tracking-tighter text-slate-900 dark:text-white italic px-1">
+                            {activityFilter === 'Legends' ? 'COLLECTION' : 'LEDGER FEED'}
                         </h3>
-                        {activities.length > 0 && (
-                            <button className="text-[10px] font-black uppercase tracking-[0.15em] text-primary bg-primary/5 px-3 py-1.5 rounded-full">
-                                History
-                            </button>
-                        )}
+                        <div className="flex gap-2">
+                            <div className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse" />
+                            <div className="w-2 h-2 rounded-full bg-vivid-purple animate-pulse delay-75" />
+                        </div>
                     </div>
 
-                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
                         {['All', 'Transaction', 'GM', 'Check-in', 'Legends'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActivityFilter(tab)}
-                                className={`whitespace-nowrap px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${activityFilter === tab
-                                    ? 'bg-primary/10 border-primary/30 text-primary'
-                                    : 'bg-white dark:bg-slate-900/40 border-slate-100 dark:border-white/5 text-slate-400 dark:text-slate-500'
+                                className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-marker text-[10px] uppercase tracking-widest border transition-all ${activityFilter === tab
+                                    ? 'bg-void text-white border-white/20 shadow-xl'
+                                    : 'bg-white/40 dark:bg-white/5 border-slate-100 dark:border-white/5 text-slate-400'
                                     }`}
                             >
                                 {tab} <span className="ml-1 opacity-50 tabular-nums">{counts[tab] ?? 0}</span>
@@ -350,29 +336,22 @@ const HomePage = () => {
                     <div className="space-y-4">
                         {activityFilter === 'Legends' ? (
                             legends.length === 0 ? (
-                                <div className="text-center py-10 glass-effect rounded-[2rem] border-dashed border border-slate-200 dark:border-white/5">
-                                    <span className="material-icons text-4xl text-slate-300 dark:text-slate-700 mb-3">auto_awesome</span>
-                                    <p className="text-slate-500 font-bold text-sm tracking-tight px-6">Your collection is empty. Mint your first Legend!</p>
+                                <div className="text-center py-16 bg-white/40 dark:bg-void/40 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10">
+                                    <span className="material-icons text-5xl text-slate-300 dark:text-slate-800 mb-4 animate-bounce-slow">security</span>
+                                    <p className="font-marker text-slate-500 uppercase tracking-widest text-xs">VAULT IS EMPTY</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-5">
                                     {legends.map((nft) => (
-                                        <div key={nft.id} className="relative group/legend hover:scale-[1.05] transition-all duration-500">
-                                            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-[2rem] opacity-0 group-hover/legend:opacity-100 transition-opacity"></div>
-                                            <div className="aspect-square rounded-[2rem] border-2 border-white dark:border-white/10 overflow-hidden relative shadow-2xl">
-                                                <img
-                                                    src={nft.image}
-                                                    alt="Legend NFT"
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.onerror = null;
-                                                        e.target.src = '/images/hero.png';
-                                                    }}
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                                                    <p className="text-[9px] font-black text-white uppercase tracking-widest">
-                                                        {new Date(nft.mintedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                    </p>
+                                        <div key={nft.id} className="relative group/legend hover:scale-[1.05] transition-all duration-700">
+                                            <div className="p-1 rounded-[2.2rem] bg-gradient-to-br from-white/20 to-transparent">
+                                                <div className="aspect-square rounded-[2rem] overflow-hidden relative shadow-2xl">
+                                                    <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-overlay bg-noise z-10" />
+                                                    <img src={nft.image} alt="NFT" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent opacity-60" />
+                                                    <div className="absolute bottom-4 left-4">
+                                                        <p className="font-marker text-[9px] text-white uppercase tracking-widest">SECURED</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -381,39 +360,36 @@ const HomePage = () => {
                             )
                         ) : (
                             !isConnected ? (
-                                <div className="text-center py-10 glass-effect rounded-[2rem] border-dashed border border-slate-200 dark:border-white/5">
-                                    <span className="material-icons text-4xl text-slate-300 dark:text-slate-700 mb-3">lock</span>
-                                    <p className="text-slate-500 font-bold text-sm tracking-tight px-6">Connect your wallet to track your onchain journey</p>
+                                <div className="text-center py-16 bg-white/40 dark:bg-void/40 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10">
+                                    <span className="material-icons text-5xl text-slate-300 dark:text-slate-800 mb-4">private_connectivity</span>
+                                    <p className="font-marker text-slate-500 uppercase tracking-widest text-xs">SYNC FOR ACCESS</p>
                                 </div>
                             ) : activities.length === 0 ? (
-                                <div className="text-center py-10 glass-effect rounded-[2rem] border-dashed border border-slate-200 dark:border-white/5">
-                                    <span className="material-icons text-4xl text-slate-300 dark:text-slate-700 mb-3">waves</span>
-                                    <p className="text-slate-500 font-bold text-sm tracking-tight px-6">Your activity feed is empty. Start with a GM!</p>
+                                <div className="text-center py-16 bg-white/40 dark:bg-void/40 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10">
+                                    <span className="material-icons text-5xl text-slate-300 dark:text-slate-800 mb-4">radar</span>
+                                    <p className="font-marker text-slate-500 uppercase tracking-widest text-xs">NO SIGNALS DETECTED</p>
                                 </div>
                             ) : (
                                 visibleActivities.map((activity) => (
                                     <div
                                         key={activity.id}
                                         onClick={() => handleTxClick(activity)}
-                                        className="flex items-center justify-between p-4 rounded-3xl glass-effect dark:bg-slate-900/20 border border-slate-100 dark:border-white/5 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-900/40 transition-all cursor-pointer group active:scale-[0.98] relative overflow-hidden"
+                                        className="flex items-center justify-between p-5 rounded-[2.2rem] bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl border border-white/10 hover:bg-white dark:hover:bg-slate-900 transition-all cursor-pointer group active:scale-[0.98] relative overflow-hidden"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${activity.type === 'GM'
-                                                ? 'bg-blue-500/10 text-blue-500'
-                                                : activity.type === 'Check-in' ? 'bg-orange-500/10 text-orange-500' : 'bg-primary/10 text-primary'
-                                                }`}>
-                                                <span className="material-icons text-xl">{activity.icon || (activity.type === 'GM' ? 'send' : 'star')}</span>
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-14 h-14 rounded-2xl bg-void flex items-center justify-center shadow-2xl border border-white/5 group-hover:bg-primary/20 transition-colors">
+                                                <span className="material-icons text-2xl text-white group-hover:text-primary transition-colors">{activity.icon || (activity.type === 'GM' ? 'send' : 'star')}</span>
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-sm text-slate-900 dark:text-white group-hover:text-primary transition-colors">{activity.title || activity.type}</h4>
-                                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wider">{activity.timestamp || activity.time}</p>
+                                                <h4 className="font-marker text-base text-slate-900 dark:text-white uppercase tracking-tighter">{activity.title || activity.type}</h4>
+                                                <p className="font-marker text-[9px] text-slate-400 mt-1 uppercase tracking-widest">{activity.timestamp || activity.time}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-black text-sm text-slate-900 dark:text-white tracking-tighter">{activity.amount}</p>
-                                            <div className="flex items-center justify-end gap-1 mt-1">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Success</p>
+                                            <p className="font-marker text-sm text-slate-900 dark:text-white italic tracking-tighter">{activity.amount}</p>
+                                            <div className="flex items-center justify-end gap-2 mt-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-lg">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
+                                                <p className="text-[8px] font-black text-emerald-500 uppercase tracking-tighter">SECURED</p>
                                             </div>
                                         </div>
                                     </div>
@@ -423,145 +399,143 @@ const HomePage = () => {
                     </div>
                 </section>
 
-                {/* Modals */}
+                {/* Receiver Modal Refined */}
                 {showReceiveModal && (
                     <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:pb-0">
-                        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity" onClick={() => setShowReceiveModal(false)}></div>
-                        <div className="relative w-full max-w-sm glass-effect dark:bg-slate-900/95 p-8 rounded-[3.5rem] border border-white/20 dark:border-white/10 shadow-3xl animate-in fade-in slide-in-from-bottom-20 duration-500 backdrop-blur-[40px]">
-                            <div className="flex flex-col items-center text-center">
-                                <div className="absolute top-6 right-6">
-                                    <button onClick={() => setShowReceiveModal(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 transition-colors">
-                                        <span className="material-icons text-xl">close</span>
+                        <div className="fixed inset-0 bg-void/80 backdrop-blur-xl transition-opacity" onClick={() => setShowReceiveModal(false)}></div>
+                        <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3.5rem] p-1 shadow-3xl animate-in fade-in slide-in-from-bottom-20 duration-500 overflow-hidden">
+                            <div className="p-8 pb-10 flex flex-col items-center">
+                                <div className="absolute top-8 right-8">
+                                    <button onClick={() => setShowReceiveModal(false)} className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:scale-110 transition-transform">
+                                        <span className="material-icons">close</span>
                                     </button>
                                 </div>
-                                <div className="w-16 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mb-10 opacity-50"></div>
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter">Receive Assets</h3>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs mb-10 font-bold px-6 leading-relaxed">Scan your unique Base identity to receive assets instantly into your safe.</p>
+                                <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mb-10" />
+                                <h3 className="font-marker text-3xl text-slate-900 dark:text-white mb-2 italic tracking-tighter">SECURE RECEIVE</h3>
+                                <p className="font-bold text-slate-500 uppercase text-[10px] tracking-widest mb-10 opacity-60">Scan to initiate incoming transfer</p>
 
-                                <div className="relative mb-12">
-                                    <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150 animate-pulse"></div>
-                                    <div className="relative bg-white p-7 rounded-[3rem] shadow-2xl border-4 border-slate-50 ring-8 ring-primary/5">
-                                        {address ? <QRCodeSVG value={address} size={180} level="H" /> : <div className="w-[180px] h-[180px] flex items-center justify-center"><span className="material-icons text-6xl text-slate-200">wallet</span></div>}
-                                    </div>
+                                <div className="relative p-6 bg-white rounded-[3rem] shadow-2xl ring-8 ring-primary/5 mb-12 group">
+                                    <div className="absolute -inset-2 bg-gradient-to-tr from-cyber-cyan via-vivid-purple to-graffiti-red blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+                                    {address ? <QRCodeSVG value={address} size={200} level="H" /> : <div className="w-[200px] h-[200px]" />}
                                 </div>
 
-                                <div className="w-full bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-white/5 mb-10 text-left shadow-inner relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                                    <p className="relative text-[9px] font-black text-primary uppercase tracking-[0.25em] mb-4">Your Public Safe Address</p>
-                                    <div className="relative flex items-center justify-between gap-4">
-                                        <span className="text-[11px] font-black text-slate-900 dark:text-white font-mono break-all leading-tight opacity-80">{address || 'Connecting...'}</span>
-                                        <button onClick={() => copyToClipboardText(address)} className={`h-11 w-11 flex-shrink-0 rounded-2xl transition-all shadow-lg ${copied ? 'bg-emerald-500 text-white' : 'bg-primary text-white hover:bg-indigo-600'}`}>
-                                            <span className="material-icons text-xl">{copied ? 'check' : 'content_copy'}</span>
+                                <div className="w-full bg-slate-50 dark:bg-void/50 p-6 rounded-[2.5rem] border border-slate-100 dark:border-white/5 mb-8 relative overflow-hidden group">
+                                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-noise" />
+                                    <p className="font-marker text-[9px] text-primary uppercase tracking-[0.3em] mb-4">PUBLIC RECOGNITION KEY</p>
+                                    <div className="flex items-center justify-between gap-5">
+                                        <span className="text-[12px] font-marker italic text-slate-900 dark:text-white break-all leading-tight opacity-70">{address || 'SCANNING...'}</span>
+                                        <button onClick={() => copyToClipboardText(address)} className={`h-12 w-12 flex-shrink-0 rounded-2xl transition-all shadow-xl ${copied ? 'bg-emerald-500' : 'bg-void text-white'}`}>
+                                            <span className="material-icons text-xl">{copied ? 'task_alt' : 'content_copy'}</span>
                                         </button>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowReceiveModal(false)} className="w-full h-15 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs uppercase tracking-[0.25em] active:scale-[0.98] transition-all">Done</button>
+                                <button onClick={() => setShowReceiveModal(false)} className="w-full h-16 rounded-[1.8rem] bg-void dark:bg-white text-white dark:text-slate-900 font-marker text-sm uppercase tracking-widest active:scale-95 transition-all">TERMINATE</button>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* Transfer Modal Refined */}
                 {showSendModal && (
                     <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:pb-0">
-                        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity" onClick={() => setShowSendModal(false)}></div>
-                        <div className="relative w-full max-w-sm glass-effect dark:bg-slate-900/95 p-8 rounded-[3.5rem] border border-white/20 dark:border-white/10 shadow-3xl animate-in fade-in slide-in-from-bottom-20 duration-500 backdrop-blur-[40px]">
-                            <div className="flex justify-between items-center mb-12">
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">Transfer</h3>
-                                <button onClick={() => setShowSendModal(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 transition-colors">
+                        <div className="fixed inset-0 bg-void/80 backdrop-blur-xl transition-opacity" onClick={() => setShowSendModal(false)}></div>
+                        <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3.5rem] p-8 shadow-3xl animate-in fade-in slide-in-from-bottom-20 duration-500 border border-white/10">
+                            <div className="flex justify-between items-center mb-10">
+                                <h3 className="font-marker text-3xl text-slate-900 dark:text-white italic tracking-tighter">OUTBOUND</h3>
+                                <button onClick={() => setShowSendModal(false)} className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400">
                                     <span className="material-icons">close</span>
                                 </button>
                             </div>
                             <div className="space-y-8">
-                                <div className="group">
-                                    <div className="flex items-center gap-1.5 mb-4 ml-1">
-                                        <span className="material-icons text-[12px] text-slate-400 uppercase">person</span>
-                                        <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Recipient Address</p>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between px-1">
+                                        <p className="font-marker text-[10px] text-slate-400 uppercase tracking-widest">RECIPIENT_ID</p>
+                                        <span className="material-icons text-[14px] text-primary">security</span>
                                     </div>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="0x... or ENS name"
-                                            value={sendAddress}
-                                            onChange={(e) => setSendAddress(e.target.value)}
-                                            className="w-full h-16 bg-slate-50 dark:bg-slate-800/80 rounded-2xl px-6 pr-12 text-sm font-black text-slate-900 dark:text-white border border-slate-100 dark:border-white/10 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all shadow-inner"
-                                        />
-                                        <span className="absolute right-5 top-1/2 -translate-y-1/2 material-icons text-slate-300 dark:text-slate-600">contact_page</span>
-                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="0x..."
+                                        value={sendAddress}
+                                        onChange={(e) => setSendAddress(e.target.value)}
+                                        className="w-full h-16 bg-slate-50 dark:bg-void/80 rounded-[1.8rem] px-6 text-sm font-marker italic text-slate-900 dark:text-white border border-slate-100 dark:border-white/5 outline-none focus:border-primary/50 transition-all shadow-inner"
+                                    />
                                 </div>
-                                <div>
-                                    <div className="flex justify-between items-center mb-4 px-1">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="material-icons text-[12px] text-slate-400">payments</span>
-                                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Amount</p>
-                                        </div>
-                                        <button onClick={handleMaxAmount} className="text-[9px] font-black text-primary uppercase tracking-[0.15em] bg-primary/5 px-3 py-1.5 rounded-xl hover:bg-primary/10 transition-colors">
-                                            Available: {balance ? parseFloat(balance.formatted).toFixed(4) : '0'}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center px-1">
+                                        <p className="font-marker text-[10px] text-slate-400 uppercase tracking-widest">PAYLOAD_VALUE</p>
+                                        <button onClick={handleMaxAmount} className="font-marker text-[9px] text-primary uppercase tracking-widest bg-primary/10 px-3 py-1.5 rounded-xl">
+                                            MAX: {balance ? parseFloat(balance.formatted).toFixed(4) : '0'}
                                         </button>
                                     </div>
-                                    <div className="relative group">
+                                    <div className="relative">
                                         <input
                                             type="number"
                                             placeholder="0.00"
                                             value={sendAmount}
                                             onChange={(e) => setSendAmount(e.target.value)}
-                                            className="w-full h-20 bg-slate-50 dark:bg-slate-800/80 rounded-3xl px-8 text-4xl font-black text-slate-900 dark:text-white border border-slate-100 dark:border-white/10 outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                            className="w-full h-20 bg-slate-50 dark:bg-void/80 rounded-[2.2rem] px-8 text-4xl font-marker italic text-slate-900 dark:text-white border border-slate-100 dark:border-white/5 outline-none focus:border-primary/50 transition-all shadow-inner"
                                         />
-                                        <div className="absolute right-8 top-1/2 -translate-y-1/2 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-                                            <span className="font-black text-primary tracking-widest text-[11px]">ETH</span>
+                                        <div className="absolute right-8 top-1/2 -translate-y-1/2 bg-void px-3 py-1.5 rounded-xl border border-white/10">
+                                            <span className="font-marker text-primary tracking-tighter text-[11px]">ETH</span>
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={handleSend} disabled={!sendAddress || !sendAmount || isSending} className="w-full h-18 btn-premium rounded-2xl mt-8 shadow-2xl shadow-primary/20">
-                                    {isSending ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div> : (
-                                        <div className="flex items-center justify-center gap-3">
-                                            <span className="material-icons text-xl">send</span>
-                                            <span className="tracking-[0.2em]">Confirm Transfer</span>
-                                        </div>
+                                <button onClick={handleSend} disabled={!sendAddress || !sendAmount || isSending} className="w-full h-20 bg-void text-white rounded-[2.2rem] font-marker text-xl uppercase tracking-widest shadow-2xl shadow-primary/30 flex items-center justify-center gap-4 border border-white/5 active:scale-95 transition-all overflow-hidden relative">
+                                    {isSending ? (
+                                        <div className="w-6 h-6 border-3 border-cyber-cyan/30 border-t-cyber-cyan rounded-full animate-spin"></div>
+                                    ) : (
+                                        <>
+                                            <span className="material-icons text-xl text-graffiti-red">bolt</span>
+                                            <span>EXECUTE TRANSFER</span>
+                                        </>
                                     )}
+                                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-noise" />
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* Tx Modal Refined */}
                 {showTxModal && selectedTx && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-void/90 backdrop-blur-xl animate-in fade-in duration-300">
                         <div className="fixed inset-0" onClick={() => setShowTxModal(false)}></div>
-                        <div className="relative w-full max-w-sm glass-effect dark:bg-slate-900/95 rounded-[3.5rem] p-8 shadow-3xl animate-in slide-in-from-bottom-10 duration-500 backdrop-blur-[40px] border border-white/10">
+                        <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3.8rem] p-8 shadow-3xl animate-in slide-in-from-bottom-10 duration-500 border border-white/10">
                             <div className="flex items-center justify-between mb-10">
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Transaction</h3>
-                                <button onClick={() => setShowTxModal(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-500 transition-colors">
+                                <h3 className="font-marker text-2xl text-slate-900 dark:text-white italic tracking-tighter uppercase">Signal Report</h3>
+                                <button onClick={() => setShowTxModal(false)} className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-slate-400">
                                     <span className="material-icons">close</span>
                                 </button>
                             </div>
                             <div className="space-y-8">
-                                <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-3xl border border-slate-100 dark:border-white/5 shadow-inner">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-3 opacity-60">Internal Reference</p>
-                                    <code className="text-[11px] font-black text-slate-900 dark:text-white break-all leading-tight opacity-90">{selectedTx.transactionHash || selectedTx.id}</code>
+                                <div className="p-6 bg-slate-50 dark:bg-void/60 rounded-[2.5rem] border border-slate-100 dark:border-white/10 shadow-inner relative overflow-hidden">
+                                    <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent opacity-50" />
+                                    <p className="font-marker text-[9px] text-slate-500 uppercase tracking-widest mb-4">TRANSACTION_HASH</p>
+                                    <code className="font-marker text-[11px] italic text-slate-900 dark:text-white break-all leading-tight opacity-70 block">{selectedTx.transactionHash || selectedTx.id}</code>
                                 </div>
-                                <div className="grid grid-cols-2 gap-y-8 gap-x-4">
-                                    <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 opacity-60">Verification</p>
-                                        <div className="flex items-center gap-2 font-black text-emerald-500 text-[11px] uppercase tracking-widest">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Confirmed
+                                <div className="grid grid-cols-2 gap-y-10 gap-x-6">
+                                    <div className="space-y-2">
+                                        <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest">Protocol Check</p>
+                                        <div className="flex items-center gap-2 font-black text-emerald-500 text-[10px] uppercase tracking-tighter">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981]"></div> SECURED
                                         </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 opacity-60">Network</p>
-                                        <p className="font-black text-[11px] text-slate-900 dark:text-white uppercase tracking-widest">Base Mainnet</p>
+                                    <div className="space-y-2">
+                                        <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest">Network Edge</p>
+                                        <p className="font-marker text-[10px] text-slate-900 dark:text-white uppercase tracking-tighter italic">BASE MAINNET</p>
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 opacity-60">Method</p>
-                                        <p className="font-black text-[11px] text-slate-900 dark:text-white uppercase tracking-widest">{selectedTx.type}</p>
+                                    <div className="space-y-2">
+                                        <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest">Payload Method</p>
+                                        <p className="font-marker text-[10px] text-slate-900 dark:text-white uppercase tracking-tighter italic">{selectedTx.type.toUpperCase()}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 opacity-60">Value</p>
-                                        <p className="font-black text-sm text-primary tracking-tighter">{selectedTx.amount}</p>
+                                    <div className="space-y-2">
+                                        <p className="font-marker text-[9px] text-slate-400 uppercase tracking-widest">Signal Value</p>
+                                        <p className="font-marker text-lg text-primary italic tracking-tight">{selectedTx.amount || '0 ETH'}</p>
                                     </div>
                                 </div>
                                 {txExplorerUrl && (
-                                    <a href={txExplorerUrl} target="_blank" rel="noopener noreferrer" className="w-full h-16 bg-slate-100 dark:bg-white text-slate-900 dark:text-slate-900 rounded-2xl flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/5">
-                                        <span className="material-icons text-lg">public</span> Onchain View
+                                    <a href={txExplorerUrl} target="_blank" rel="noopener noreferrer" className="w-full h-18 bg-void dark:bg-white text-white dark:text-void rounded-[2rem] flex items-center justify-center gap-4 font-marker text-xs uppercase tracking-widest active:scale-[0.98] transition-all shadow-2xl relative overflow-hidden">
+                                        <span className="material-icons text-xl text-cyber-cyan">public</span> Onchain Ledger
                                     </a>
                                 )}
                             </div>

@@ -14,7 +14,7 @@ import { FarcasterProvider } from './context/FarcasterContext';
 
 const queryClient = new QueryClient();
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -32,6 +32,5 @@ createRoot(document.getElementById('root')).render(
         </OnchainKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
-  </StrictMode>,
+  </StrictMode>
 );
-

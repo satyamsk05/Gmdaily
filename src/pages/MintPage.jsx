@@ -4,6 +4,7 @@ import StatusBar from '../components/StatusBar';
 import { useAccount, usePublicClient, useReadContract } from 'wagmi';
 import { base } from 'viem/chains';
 import { encodeFunctionData, parseEther, formatEther } from 'viem';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ConnectWallet,
   Wallet
@@ -22,46 +23,22 @@ const MintPage = () => {
   const { addActivity } = useActivity();
   const publicClient = usePublicClient();
 
-  // Using the contract address from HomePage which is likely the correct one for the current project context
   const NFT_CONTRACT = '0xa932a9960C83FcCc382bd8fd7CE6b6AeF4a2e2dE';
   const MINT_PRICE_ETH = '0.0002';
 
   const nftAbi = [
-    {
-      type: 'function',
-      name: 'mint',
-      stateMutability: 'payable',
-      inputs: [],
-      outputs: [],
-    },
-    {
-      type: 'function',
-      name: 'totalMinted',
-      stateMutability: 'view',
-      inputs: [],
-      outputs: [{ type: 'uint256' }],
-    },
-    {
-      type: 'function',
-      name: 'MAX_SUPPLY',
-      stateMutability: 'view',
-      inputs: [],
-      outputs: [{ type: 'uint256' }],
-    },
-    {
-      type: 'function',
-      name: 'hasUserMinted',
-      stateMutability: 'view',
-      inputs: [{ type: 'address' }],
-      outputs: [{ type: 'bool' }],
-    },
+    { type: 'function', name: 'mint', stateMutability: 'payable', inputs: [], outputs: [] },
+    { type: 'function', name: 'totalMinted', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+    { type: 'function', name: 'MAX_SUPPLY', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+    { type: 'function', name: 'hasUserMinted', stateMutability: 'view', inputs: [{ type: 'address' }], outputs: [{ type: 'bool' }] },
   ];
 
   const [txHash, setTxHash] = useState(null);
   const [gasFee, setGasFee] = useState(null);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [randomImage, setRandomImage] = useState('/images/hero.png');
+  const [randomImage, setRandomImage] = useState('https://images.unsplash.com/photo-1635322966219-b75ed3a90122?w=800&h=800&fit=crop');
   const [hasMinted, setHasMinted] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
 
   // Contract Reads
   const { data: totalMintedData } = useReadContract({
@@ -91,70 +68,36 @@ const MintPage = () => {
   const maxSupply = maxSupplyData ? Number(maxSupplyData) : 5555;
   const progressPercent = Math.min((totalMinted / maxSupply) * 100, 100);
 
-  // Curated high-quality anime & cyberpunk style portraits
   const nftImages = [
-    'https://images.unsplash.com/photo-1635322966219-b75ed3a90122?w=800&h=800&fit=crop', // Cyberpunk Visor
-    'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=800&h=800&fit=crop', // Anime Girl Art
-    'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&h=800&fit=crop', // Neon Portrait
-    'https://images.unsplash.com/photo-1541560052-5e137f229371?w=800&h=800&fit=crop', // Cyberpunk Boy
-    'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=800&fit=crop', // Neon City Vibe
-    'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=800&h=800&fit=crop', // Abstract Digital
-    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&h=800&fit=crop', // Stylized Art
-    'https://images.unsplash.com/photo-1565528994778-9e32231648a7?w=800&h=800&fit=crop', // Futuristic Fashion
-    'https://images.unsplash.com/photo-1515630278258-407f66498911?w=800&h=800&fit=crop', // Neon Lights
-    'https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?w=800&h=800&fit=crop', // Cyber Texture
+    'https://images.unsplash.com/photo-1635322966219-b75ed3a90122?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1541560052-5e137f229371?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1565528994778-9e32231648a7?w=800&h=800&fit=crop',
   ];
 
   useEffect(() => {
-    // Sync local state with contract state
     if (hasUserMintedData) {
       setHasMinted(true);
     } else {
-      // Fallback to local storage if contract read not ready or false (though contract is truth)
       const storedLegends = JSON.parse(localStorage.getItem('my_legends') || '[]');
       if (storedLegends.length > 0) {
         setHasMinted(true);
       }
     }
-
-    // Pick a random image on mount (this will be the one revealed)
     setRandomImage(nftImages[Math.floor(Math.random() * nftImages.length)]);
-
-    // Estimate gas if connected
-    const estimateGas = async () => {
-      if (!publicClient || !address) return;
-      try {
-        const gas = await publicClient.estimateGas({
-          account: address,
-          to: NFT_CONTRACT,
-          data: encodeFunctionData({
-            abi: nftAbi,
-            functionName: 'mint',
-            args: [],
-          }),
-          value: parseEther(MINT_PRICE_ETH),
-        });
-        const gasPrice = await publicClient.getGasPrice();
-        const feeWei = gas * gasPrice;
-        const feeEth = formatEther(feeWei);
-        setGasFee(parseFloat(feeEth).toFixed(6));
-      } catch (error) {
-        console.error('Gas estimation failed:', error);
-        // Fallback to a safe estimate if RPC fails
-        setGasFee('0.000020');
-      }
-    };
-
-    estimateGas();
-  }, [publicClient, address, hasUserMintedData]);
+  }, [hasUserMintedData]);
 
   const handleSuccess = (response) => {
     const hash = response?.transactionHash || response;
     setTxHash(hash);
-    setIsRevealed(true); // Trigger Reveal!
-    setHasMinted(true); // Mark as minted immediately
+    setIsRevealed(true);
+    setHasMinted(true);
+    setIsMinting(false);
 
-    // Save to collection for Home Page display
     try {
       const currentCollection = JSON.parse(localStorage.getItem('my_legends') || '[]');
       const newNft = {
@@ -189,134 +132,205 @@ const MintPage = () => {
   ], [NFT_CONTRACT]);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-full bg-background-light dark:bg-background-dark overflow-hidden fixed inset-0">
-      {/* Background Orbs */}
-      <div className="bg-orb w-96 h-96 bg-primary/20 -top-20 -right-20 animate-pulse"></div>
-      <div className="bg-orb w-80 h-80 bg-indigo-500/10 bottom-1/4 -left-40 animate-bounce-slow"></div>
+    <div className="flex flex-col h-full w-full bg-transparent overflow-hidden relative">
+      {/* Background Orbs & Atmosphere */}
+      <div className="absolute inset-0 bg-gradient-to-b from-void via-slate-950 to-void opacity-0 dark:opacity-100 transition-opacity duration-1000 z-0"></div>
+      <div className="bg-orb w-[500px] h-[500px] bg-primary/20 -top-40 -right-40 animate-pulse blur-[120px]"></div>
+      <div className="bg-orb w-[400px] h-[400px] bg-vivid-purple/10 bottom-1/4 -left-40 animate-bounce-slow blur-[100px]"></div>
 
       <StatusBar dark={false} notch={true} />
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-transparent z-20 shrink-0">
-        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white shadow-lg shadow-slate-200/50 dark:shadow-black/20 active:scale-90 transition-all border border-white dark:border-white/10 hover:bg-white dark:hover:bg-surface-dark">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-2xl bg-white/10 dark:bg-white/5 backdrop-blur-xl text-slate-900 dark:text-white border border-white/20 hover:bg-white/20 transition-all active:scale-90">
           <span className="material-icons text-2xl">chevron_left</span>
         </button>
+        <div className="font-marker text-lg text-graffiti-red tracking-tight">MINT STATION</div>
         <div className="w-11"></div>
       </header>
 
-      <main className="flex-1 overflow-y-auto w-full px-6 pb-24 relative z-10 flex flex-col justify-center">
-        <div className="animate-fade-in-up">
-          <div className="glass-effect dark:bg-surface-dark/40 p-2 rounded-[3rem] relative overflow-hidden border border-white dark:border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] group">
+      <main className="flex-1 overflow-y-auto w-full px-6 pb-28 relative z-10 flex flex-col justify-center">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="relative"
+        >
+          {/* Main Container with Iridescent Border & Laser Effect */}
+          <div className="p-[1px] rounded-[3.5rem] bg-gradient-to-br from-cyber-cyan via-vivid-purple to-graffiti-red shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] relative group">
+            <div className="absolute inset-0 rounded-[3.5rem] laser-border opacity-0 dark:opacity-30 pointer-events-none" />
+            <div className="bg-white/95 dark:bg-slate-900/98 backdrop-blur-3xl rounded-[3.4rem] overflow-hidden p-3 pt-0 border border-white/10 dark:neon-glow-cyan transition-all duration-500">
 
-            <div className="relative z-10 flex flex-col">
-              {/* Top Section: Full Width Image */}
-              <div className="relative w-full aspect-square rounded-[2.5rem] overflow-hidden group/nft">
-                {/* Live Badge */}
-                <div className="absolute top-6 left-6 z-30 bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/20 shadow-lg">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Live Now</span>
+              {/* NFT Hero Area */}
+              <div className="relative w-full aspect-square rounded-[2.8rem] overflow-hidden bg-slate-800 border border-white/10 group mt-3">
+                {/* Live Badge - Graffiti Style */}
+                <div className="absolute top-6 left-6 z-30">
+                  <div className="bg-slate-900/60 backdrop-blur-md rounded-full px-4 py-2 border border-white/10 flex items-center gap-2 shadow-2xl">
+                    <span className="w-2.5 h-2.5 rounded-full bg-graffiti-red animate-pulse shadow-[0_0_15px_#FF003C]"></span>
+                    <span className="font-marker text-[11px] uppercase tracking-[0.2em] text-white">LIVE MINT</span>
+                  </div>
                 </div>
 
-                <div className={`w-full h-full bg-slate-900 relative transition-all duration-700`}>
+                <AnimatePresence mode="wait">
                   {!isRevealed && !hasMinted ? (
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center animate-pulse">
-                      <img
-                        src={randomImage}
-                        alt="Preview"
-                        className="w-full h-full object-cover opacity-50 blur-xl scale-110 absolute inset-0"
-                        onError={(e) => { e.target.onerror = null; e.target.src = '/images/hero.png'; }}
-                      />
-                      <div className="relative z-10 flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
-                          <span className="material-icons text-white/90 text-4xl drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">lock</span>
+                    <motion.div
+                      key="hidden"
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0, scale: 1.1 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      {/* Gritty Tech Overlays */}
+                      <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-overlay bg-noise" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/80 pointer-events-none" />
+
+                      {/* Digital Distortion Effect */}
+                      <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,240,255,0.05)_2px,rgba(0,240,255,0.05)_4px)]" />
+
+                      <div className="relative z-10 text-center px-8">
+                        <div className="w-28 h-28 mx-auto mb-8 relative">
+                          <motion.div
+                            animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="absolute inset-0 bg-cyber-cyan blur-3xl rounded-full"
+                          />
+                          <div className="relative w-full h-full bg-void/90 backdrop-blur-2xl rounded-[2rem] border-2 border-cyber-cyan/40 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,240,255,0.2)]">
+                            <span className="material-icons text-cyber-cyan text-5xl drop-shadow-[0_0_20px_#00F0FF]">security</span>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <h1 className="text-3xl font-black leading-tight text-white tracking-tight drop-shadow-lg">OG Genesis Mint</h1>
-                          <p className="text-blue-200 text-xs font-bold tracking-wide drop-shadow-md mt-1">Phase 1: The Awakening</p>
+                        <h1 className="font-marker text-5xl text-white mb-3 tracking-tighter drop-shadow-2xl italic">GENESIS</h1>
+                        <div className="inline-block px-4 py-1.5 bg-cyber-cyan/20 rounded-xl border border-cyber-cyan/30">
+                          <p className="font-black text-cyber-cyan text-[10px] uppercase tracking-[0.3em]">Restricted Access</p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ) : (
-                    <img
-                      src={randomImage}
-                      alt="NFT Art"
-                      className="w-full h-full object-cover animate-in zoom-in duration-1000"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/images/hero.png';
-                      }}
-                    />
+                    <motion.div
+                      key="revealed"
+                      initial={{ scale: 1.3, rotate: 5, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ type: "spring", damping: 12, stiffness: 100 }}
+                      className="absolute inset-0"
+                    >
+                      <img
+                        src={randomImage}
+                        alt="Restored Art"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-void/90 via-transparent to-transparent" />
+
+                      {/* Scanlines for the revealed image */}
+                      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,white_2px,white_4px)] mix-blend-overlay" />
+                    </motion.div>
                   )}
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-90"></div>
-                </div>
+                </AnimatePresence>
               </div>
 
-              {/* Bottom Section: Details */}
-              <div className="px-5 pb-6 -mt-12 relative z-20">
-                <div className="bg-white dark:bg-surface-dark p-5 rounded-[2rem] border border-white/50 dark:border-white/5 shadow-xl backdrop-blur-xl">
-
-                  {/* Progress Bar */}
-                  <div className="mb-5">
-                    <div className="flex justify-between items-end mb-2 px-1">
-                      <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Progress</span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white"><span className="text-primary">{totalMinted.toLocaleString()}</span> / {maxSupply.toLocaleString()}</span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)] transition-all duration-1000"
-                        style={{ width: `${progressPercent}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-[9px] text-slate-400 text-center mt-3 leading-relaxed px-2">
-                      Join the first generation of explorers. Holders get exclusive access to the upcoming meta-verse drop.
+              {/* Controls UI */}
+              <div className="px-6 pb-10 pt-10 text-center relative z-20">
+                <div className="flex justify-between items-end mb-5">
+                  <div className="text-left">
+                    <p className="font-marker text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-1">STREAK TARGET</p>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white tracking-widest flex items-baseline gap-2">
+                      {totalMinted.toLocaleString()} <span className="text-slate-200 dark:text-slate-800 text-xl">/</span> {maxSupply.toLocaleString()}
                     </p>
                   </div>
+                  <div className="px-4 py-1.5 bg-gradient-to-r from-cyber-cyan/10 to-vivid-purple/10 rounded-2xl border border-white/10 backdrop-blur-md">
+                    <span className="text-xs font-black text-cyber-cyan tracking-wider">{progressPercent.toFixed(1)}%</span>
+                  </div>
+                </div>
 
-                  {/* Action Area */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Price</span>
-                      <span className="text-xl font-black text-slate-900 dark:text-white">{MINT_PRICE_ETH} ETH</span>
+                {/* Performance Progress Bar */}
+                <div className="relative w-full h-4 bg-slate-100 dark:bg-void/50 rounded-full overflow-hidden mb-10 border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    className="h-full bg-gradient-to-r from-cyber-cyan via-vivid-purple to-graffiti-red relative"
+                  >
+                    <div className="absolute right-0 top-0 bottom-0 w-2 bg-white blur-[4px]" />
+                  </motion.div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-void/40 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner group">
+                    <div className="text-left">
+                      <p className="font-marker text-[11px] text-slate-400 group-hover:text-cyber-cyan transition-colors uppercase tracking-[0.3em] mb-1">MINT PROTOCOL</p>
+                      <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{MINT_PRICE_ETH} <span className="text-xs text-primary">ETH</span></p>
                     </div>
-
-                    <div className="flex-1 relative group/button">
-                      {!hasMinted ? (
-                        <Transaction
-                          chainId={base.id}
-                          calls={calls}
-                          onSuccess={handleSuccess}
-                        >
-                          <TransactionButton
-                            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary-hover text-white font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/25 active:scale-95 transition-all"
-                            text={
-                              <div className="flex items-center justify-center gap-2">
-                                <span>Mint Now</span>
-                                <span className="material-icons text-sm">rocket_launch</span>
-                              </div>
-                            }
-                          />
-                          <div className="mt-2 flex justify-center absolute w-full -bottom-6">
-                            <TransactionStatus>
-                              <TransactionStatusLabel className="text-slate-400 text-[9px] font-bold" />
-                            </TransactionStatus>
-                          </div>
-                        </Transaction>
-                      ) : (
-                        <button className="w-full h-14 rounded-2xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 font-black text-sm uppercase tracking-widest cursor-not-allowed border border-slate-200 dark:border-white/5">
-                          Already Minted
-                        </button>
-                      )}
+                    <div className="text-right">
+                      <div className="flex items-center gap-2 justify-end bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                        <img src="https://avatars.githubusercontent.com/u/108554348?v=4" className="w-4 h-4 rounded-full" alt="Base" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">BASE</span>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 mt-2">GAS: LOW</p>
                     </div>
                   </div>
+
+                  {!hasMinted ? (
+                    <Transaction
+                      chainId={base.id}
+                      calls={calls}
+                      onStatus={(status) => {
+                        if (status.statusName === 'building' || status.statusName === 'signing') setIsMinting(true);
+                        if (status.statusName === 'success') handleSuccess(status);
+                        if (status.statusName === 'error') setIsMinting(false);
+                      }}
+                    >
+                      <TransactionButton
+                        className={`w-full h-20 rounded-[2.2rem] font-marker text-2xl uppercase tracking-[0.2em] transition-all active:scale-[0.98] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group ${isMinting
+                          ? 'bg-slate-800 text-slate-500 cursor-wait'
+                          : 'bg-void text-white hover:bg-black hover:shadow-cyber-cyan/20'}`}
+                        text={
+                          <div className="flex items-center justify-center gap-5 relative z-10">
+                            {isMinting ? (
+                              <div className="flex items-center gap-3">
+                                <span className="animate-spin material-icons text-cyber-cyan">hourglass_top</span>
+                                <span className="text-cyber-cyan text-lg">HACKING...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <span>INITIALIZE MINT</span>
+                                <span className="material-icons text-graffiti-red group-hover:rotate-45 transition-transform text-3xl">bolt</span>
+                              </>
+                            )}
+                          </div>
+                        }
+                      />
+                      <motion.div
+                        animate={{ x: [-100, 400] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        className="absolute bottom-0 left-0 w-32 h-[3px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent blur-md opacity-40"
+                      />
+
+                      <div className="mt-4">
+                        <TransactionStatus>
+                          <TransactionStatusLabel className="text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] opacity-50" />
+                        </TransactionStatus>
+                      </div>
+                    </Transaction>
+                  ) : (
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="w-full h-20 rounded-[2.2rem] bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center gap-4 shadow-xl"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <span className="material-icons text-green-500 text-2xl">check_circle</span>
+                      </div>
+                      <span className="font-marker text-xl text-green-500 uppercase tracking-widest italic">ASSET SECURED</span>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          <div className="mt-10 mb-6 flex items-center justify-center gap-3 opacity-40 hover:opacity-100 transition-opacity">
+            <span className="h-[1px] w-12 bg-slate-300 dark:bg-slate-800" />
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em]">
+              AUTHENTICATED BY <span className="text-graffiti-red">GM DAILY</span>
+            </p>
+            <span className="h-[1px] w-12 bg-slate-300 dark:bg-slate-800" />
+          </div>
+        </motion.div>
       </main>
     </div>
   );
