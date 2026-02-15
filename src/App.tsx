@@ -13,7 +13,7 @@ import GraffitiLanding from './features/branding/GraffitiLanding';
 import './index.css';
 
 const AppContent = () => {
-    const [isDark, setIsDark] = useState(true);
+    const [isDark, setIsDark] = useState(false);
     const [showLanding, setShowLanding] = useState(false);
     const [showSplash, setShowSplash] = useState(false);
 
