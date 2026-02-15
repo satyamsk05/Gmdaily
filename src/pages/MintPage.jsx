@@ -206,7 +206,7 @@ const MintPage = () => {
 
       <main className="flex-1 overflow-y-auto w-full px-6 pb-24 relative z-10 flex flex-col justify-center">
         <div className="animate-fade-in-up">
-          <div className="glass-effect dark:bg-surface-dark/40 p-1.5 rounded-[3rem] relative overflow-hidden border border-white dark:border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] group">
+          <div className="glass-effect dark:bg-surface-dark/40 p-2 rounded-[3rem] relative overflow-hidden border border-white dark:border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] group">
 
             <div className="relative z-10 flex flex-col">
               {/* Top Section: Full Width Image */}

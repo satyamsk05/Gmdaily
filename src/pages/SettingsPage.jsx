@@ -1,30 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useUser } from '../context/UserContext';
 import StatusBar from '../components/StatusBar';
 
-const SettingsPage = () => {
+const SettingsPage = ({ isDark, setIsDark }) => {
     const navigate = useNavigate();
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
     const { userName, setUserName } = useUser();
     const [notifications, setNotifications] = useState(true);
-    const [isDarkMode, setIsDarkMode] = useState(true);
     const [copied, setCopied] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(userName);
-
-    // Sync dark mode with document class
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-        } else {
-            document.documentElement.classList.add('light');
-            document.documentElement.classList.remove('dark');
-        }
-    }, [isDarkMode]);
 
     const copyAddress = () => {
         if (address) {
@@ -205,14 +193,14 @@ const SettingsPage = () => {
                                 rightElement={
                                     <div className="flex bg-slate-100 dark:bg-background-dark/40 p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-inner">
                                         <button
-                                            onClick={() => setIsDarkMode(false)}
-                                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isDarkMode ? 'bg-white dark:bg-surface-dark text-slate-900 dark:text-white shadow-xl' : 'text-slate-400 dark:text-text-muted hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                            onClick={() => setIsDark(false)}
+                                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isDark ? 'bg-white dark:bg-surface-dark text-slate-900 dark:text-white shadow-xl' : 'text-slate-400 dark:text-text-muted hover:text-slate-600 dark:hover:text-slate-300'}`}
                                         >
                                             Light
                                         </button>
                                         <button
-                                            onClick={() => setIsDarkMode(true)}
-                                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isDarkMode ? 'bg-white dark:bg-surface-dark text-slate-900 dark:text-white shadow-xl' : 'text-slate-400 dark:text-text-muted hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                            onClick={() => setIsDark(true)}
+                                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'bg-white dark:bg-surface-dark text-slate-900 dark:text-white shadow-xl' : 'text-slate-400 dark:text-text-muted hover:text-slate-600 dark:hover:text-slate-300'}`}
                                         >
                                             Dark
                                         </button>

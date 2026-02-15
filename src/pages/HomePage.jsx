@@ -193,7 +193,23 @@ const HomePage = () => {
                     <div className="flex items-center relative group/wallet">
                         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-full blur opacity-0 group-hover/wallet:opacity-100 transition-opacity duration-500"></div>
                         <Wallet>
-                            <ConnectWallet />
+                            <ConnectWallet className="bg-transparent p-0 border-none hover:bg-transparent">
+                                {context?.user?.pfpUrl ? (
+                                    <div className="relative">
+                                        <img
+                                            src={context.user.pfpUrl}
+                                            alt="Farcaster Profile"
+                                            className="w-10 h-10 rounded-full border-2 border-white dark:border-white/10 shadow-md object-cover"
+                                        />
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#855DCD] border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                                            <img src="https://farcaster.xyz/favicon.ico" alt="FC" className="w-2.5 h-2.5" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Avatar className="h-10 w-10 text-white" />
+                                )}
+                                <span className="sr-only">Connect Wallet</span>
+                            </ConnectWallet>
                             <WalletDropdown className="z-[100]">
                                 <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
                                     <Avatar />
@@ -274,7 +290,7 @@ const HomePage = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={() => navigate('/checkin')}
-                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border border-white/20 dark:border-white/5 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group relative active:scale-[0.97]"
+                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border-2 border-orange-500 dark:border-orange-400 shadow-xl shadow-orange-500/20 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group relative active:scale-[0.97]"
                         >
                             <div className="absolute top-2 right-2 bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-lg shadow-orange-500/20">
                                 {checkInData?.streak ?? 0} DAYS
@@ -290,7 +306,7 @@ const HomePage = () => {
 
                         <button
                             onClick={() => navigate('/deploy')}
-                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border border-white/20 dark:border-white/5 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group active:scale-[0.97]"
+                            className="glass-effect dark:bg-slate-900/40 p-5 rounded-[2rem] border-2 border-indigo-500 dark:border-indigo-400 shadow-xl shadow-indigo-500/20 flex flex-col items-start gap-3 hover:scale-[1.03] transition-all group active:scale-[0.97]"
                         >
                             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/10 group-hover:bg-indigo-500/20 transition-colors shadow-inner">
                                 <span className="material-icons text-2xl text-indigo-500">rocket_launch</span>

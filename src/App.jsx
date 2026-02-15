@@ -9,7 +9,7 @@ import TabBar from './components/TabBar';
 import MintPage from './pages/MintPage';
 
 const AppContent = () => {
-    const [isDark, setIsDark] = useState(true);
+    const [isDark, setIsDark] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const routes = ['/', '/checkin', '/gm', '/settings'];
@@ -66,7 +66,7 @@ const AppContent = () => {
                 <Route path="/gm" element={<GMPage />} />
                 <Route path="/mint" element={<MintPage />} />
                 <Route path="/deploy" element={<DeployPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings" element={<SettingsPage isDark={isDark} setIsDark={setIsDark} />} />
             </Routes>
 
             <TabBar />
