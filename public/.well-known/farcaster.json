@@ -31,7 +31,6 @@
         "tagline": "Start your day with Web3.",
         "ogTitle": "GM Daily - Your Web3 Morning",
         "ogDescription": "Check in daily, discover alpha, complete tasks and grow in Web3.",
-        "ogImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
-        "castShareUrl": "https://warpcast.com/~/compose?text=GM%20⚡%20Getting%20my%20daily%20dose%20of%20alpha%20on%20GM%20Daily."
+        "ogImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png"
     }
 }
