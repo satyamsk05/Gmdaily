@@ -8,29 +8,30 @@
         "name": "Gm daily",
         "version": "1",
         "iconUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/icon.png",
-        "homeUrl": "https://gmdaily.vercel.app/",
+        "homeUrl": "https://gmdaily.vercel.app",
+        "imageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
+        "buttonTitle": "Gm Daily",
+        "splashImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
+        "splashBackgroundColor": "#6200EA",
+        "webhookUrl": "https://gmdaily.vercel.app/api/webhook",
         "subtitle": "DO IT",
         "description": "base chain daily activity",
-        "primaryCategory": "finance",
+        "primaryCategory": "utility",
         "screenshotUrls": [
             "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png"
         ],
-        "imageUrl": "https://raw.githubusercontent.com/satyamsk05/fastermini/main/public/images/preview.png",
         "heroImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
-        "splashImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
-        "splashBackgroundColor": "#6200EA",
         "tags": [
-            "crypto",
             "web3",
             "gm",
-            "depoly"
+            "deploy",
+            "check-in",
+            "vip"
         ],
         "tagline": "Start your day with Web3.",
-        "buttonTitle": "Gm Daily",
-        "ogTitle": "GM Daily - Your Web3 Morning ",
+        "ogTitle": "GM Daily - Your Web3 Morning",
         "ogDescription": "Check in daily, discover alpha, complete tasks and grow in Web3.",
         "ogImageUrl": "https://raw.githubusercontent.com/satyamsk05/Gmdaily/main/public/images/screenshot.png",
-        "castShareUrl": "https://warpcast.com/~/compose?text=GM%20⚡%20Getting%20my%20daily%20dose%20of%20alpha%20on%20GM%20Daily.",
-        "webhookUrl": "https://gmdaily.vercel.app/api/webhook"
+        "castShareUrl": "https://warpcast.com/~/compose?text=GM%20⚡%20Getting%20my%20daily%20dose%20of%20alpha%20on%20GM%20Daily."
     }
 }
