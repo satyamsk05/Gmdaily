@@ -161,7 +161,7 @@ const MintPage = () => {
             <div className="bg-white/95 dark:bg-slate-900/98 backdrop-blur-3xl rounded-[3.4rem] overflow-hidden p-3 pt-0 border border-white/10 dark:neon-glow-cyan transition-all duration-500">
 
               {/* NFT Hero Area */}
-              <div className="relative w-full aspect-square rounded-[2.8rem] overflow-hidden bg-slate-800 border border-white/10 group mt-3">
+              <div className="relative w-full aspect-square rounded-[2.8rem] overflow-hidden bg-slate-800 border border-white/10 group mt-4">
                 {/* Live Badge - Graffiti Style */}
                 <div className="absolute top-6 left-6 z-30">
                   <div className="bg-slate-900/60 backdrop-blur-md rounded-full px-4 py-2 border border-white/10 flex items-center gap-2 shadow-2xl">
@@ -170,58 +170,55 @@ const MintPage = () => {
                   </div>
                 </div>
 
-                <AnimatePresence mode="wait">
-                  {!isRevealed && !hasMinted ? (
-                    <motion.div
-                      key="hidden"
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, scale: 1.1 }}
-                      className="absolute inset-0 flex items-center justify-center"
-                    >
-                      {/* Gritty Tech Overlays */}
-                      <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-overlay bg-noise" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/80 pointer-events-none" />
+                <div className="absolute inset-0">
+                  <motion.div
+                    animate={{
+                      filter: (!isRevealed && !hasMinted) ? 'blur(20px) grayscale(0.5)' : 'blur(0px) grayscale(0)',
+                      scale: (!isRevealed && !hasMinted) ? 1.05 : 1
+                    }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-full h-full"
+                  >
+                    <img
+                      src={randomImage}
+                      alt="NFT Art"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
 
-                      {/* Digital Distortion Effect */}
-                      <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,240,255,0.05)_2px,rgba(0,240,255,0.05)_4px)]" />
+                  {/* Subtle Atmosphere Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent pointer-events-none" />
 
-                      <div className="relative z-10 text-center px-8">
-                        <div className="w-28 h-28 mx-auto mb-8 relative">
+                  {/* Restricted Access Badge - Only shown when not revealed */}
+                  <AnimatePresence>
+                    {!isRevealed && !hasMinted && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 flex items-center justify-center z-20"
+                      >
+                        <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-none" />
+                        <div className="relative text-center px-8">
                           <motion.div
-                            animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                            className="absolute inset-0 bg-cyber-cyan blur-3xl rounded-full"
-                          />
-                          <div className="relative w-full h-full bg-void/90 backdrop-blur-2xl rounded-[2rem] border-2 border-cyber-cyan/40 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,240,255,0.2)]">
-                            <span className="material-icons text-cyber-cyan text-5xl drop-shadow-[0_0_20px_#00F0FF]">security</span>
-                          </div>
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <h1 className="font-marker text-3xl text-white mb-2 tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] italic">GENESIS</h1>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyber-cyan/20 rounded-lg border border-cyber-cyan/20 backdrop-blur-md">
+                              <span className="material-icons text-cyber-cyan text-[10px]">lock</span>
+                              <p className="font-black text-cyber-cyan text-[7px] uppercase tracking-[0.3em]">Encrypted Data</p>
+                            </div>
+                          </motion.div>
                         </div>
-                        <h1 className="font-marker text-5xl text-white mb-3 tracking-tighter drop-shadow-2xl italic">GENESIS</h1>
-                        <div className="inline-block px-4 py-1.5 bg-cyber-cyan/20 rounded-xl border border-cyber-cyan/30">
-                          <p className="font-black text-cyber-cyan text-[10px] uppercase tracking-[0.3em]">Restricted Access</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="revealed"
-                      initial={{ scale: 1.3, rotate: 5, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      transition={{ type: "spring", damping: 12, stiffness: 100 }}
-                      className="absolute inset-0"
-                    >
-                      <img
-                        src={randomImage}
-                        alt="Restored Art"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-void/90 via-transparent to-transparent" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                      {/* Scanlines for the revealed image */}
-                      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,white_2px,white_4px)] mix-blend-overlay" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  {/* Gritty Tech Overlays */}
+                  <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-noise" />
+                  <div className="absolute inset-0 opacity-20 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,white_2px,white_4px)] mix-blend-overlay" />
+                </div>
               </div>
 
               {/* Controls UI */}
@@ -250,17 +247,17 @@ const MintPage = () => {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-void/40 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner group">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-void/40 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-inner group">
                     <div className="text-left">
-                      <p className="font-marker text-[11px] text-slate-400 group-hover:text-cyber-cyan transition-colors uppercase tracking-[0.3em] mb-1">MINT PROTOCOL</p>
-                      <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{MINT_PRICE_ETH} <span className="text-xs text-primary">ETH</span></p>
+                      <p className="font-marker text-[10px] text-slate-400 group-hover:text-cyber-cyan transition-colors uppercase tracking-[0.3em] mb-1">MINT PROTOCOL</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">{MINT_PRICE_ETH} <span className="text-[10px] text-primary">ETH</span></p>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                        <img src="https://avatars.githubusercontent.com/u/108554348?v=4" className="w-4 h-4 rounded-full" alt="Base" />
-                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">BASE</span>
+                      <div className="flex items-center gap-2 justify-end bg-black/40 px-2.5 py-1 rounded-lg border border-white/5">
+                        <img src="https://avatars.githubusercontent.com/u/108554348?v=4" className="w-3.5 h-3.5 rounded-full" alt="Base" />
+                        <span className="text-[9px] font-black text-white uppercase tracking-tighter">BASE</span>
                       </div>
-                      <p className="text-[10px] font-bold text-slate-400 mt-2">GAS: LOW</p>
+                      <p className="text-[8px] font-bold text-slate-500 mt-1 uppercase tracking-widest">GAS: LOW</p>
                     </div>
                   </div>
 
