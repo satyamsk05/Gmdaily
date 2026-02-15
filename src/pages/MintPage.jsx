@@ -168,21 +168,23 @@ const MintPage = () => {
                 </div>
               </div>
 
-              <div className="relative group/button pt-2">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-indigo-500 rounded-[2.2rem] blur opacity-25 group-hover/button:opacity-50 transition duration-1000 group-hover/button:duration-200"></div>
+              <div className="relative group/button pt-4">
+                {/* Refined Background Glow */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary/40 to-indigo-500/40 rounded-[2.5rem] blur-xl opacity-0 group-hover/button:opacity-100 transition-all duration-700 pointer-events-none"></div>
+
                 <Transaction
                   chainId={base.id}
                   calls={calls}
                   onSuccess={handleSuccess}
                 >
                   <TransactionButton
-                    className="w-full h-18 rounded-[2rem] glossy-button font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 active:scale-95 transition-all relative z-10 text-white"
+                    className="w-full h-16 rounded-[1.5rem] glossy-button font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all relative z-10 text-white border border-white/20"
                     text="Confirm Mint"
                   />
-                  <div className="mt-8 flex justify-center">
+                  <div className="mt-6 flex justify-center">
                     <TransactionStatus>
-                      <TransactionStatusLabel className="dark:text-white text-[11px] font-black uppercase tracking-widest text-center" />
-                      <TransactionStatusAction className="text-emerald-500 font-black text-[11px] uppercase tracking-widest hover:underline ml-2" />
+                      <TransactionStatusLabel className="dark:text-white/60 text-slate-400 text-[10px] font-black uppercase tracking-widest text-center" />
+                      <TransactionStatusAction className="text-emerald-500 font-black text-[10px] uppercase tracking-widest hover:underline ml-2" />
                     </TransactionStatus>
                   </div>
                 </Transaction>
